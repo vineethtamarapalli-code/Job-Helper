@@ -1,0 +1,1349 @@
+/* --- Global Variables --- */
+:root {
+    --color-primary: #8E2DE2;
+    --color-primary-dark: #4A00E0;
+    --color-danger: #ef4444;
+    --color-danger-dark: #dc2626;
+    --color-gradient: linear-gradient(to right, var(--color-primary), var(--color-primary-dark));
+
+    /* Standardized Shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.15); /* For glassmorphism */
+    --shadow-primary-hover: 0 6px 20px rgba(142, 45, 226, 0.5);
+    --shadow-danger-hover: 0 6px 15px rgba(239, 68, 68, 0.3);
+    
+    /* Standardized Transitions for "Butter" Effect */
+    --transition-fast: all 0.2s ease-in-out;
+    --transition-medium: all 0.3s ease-in-out;
+}
+
+/* --- NEW: Loading Overlay --- */
+.loading-overlay {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    justify-content: center;
+    align-items: center;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: var(--color-primary);
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+/* --- END NEW --- */
+
+
+/* General Body Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    /* Improves font rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Smooth scrolling for anchors */
+    scroll-behavior: smooth;
+}
+
+/* --- Global Font and Background --- */
+body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%);
+    background-color: #f8f9fa; /* Fallback */
+    background-attachment: fixed;
+    color: #333; /* Default dark text */
+    line-height: 1.6; /* Added default line-height */
+}
+
+/* --- Glassmorphism Header --- */
+.header {
+    background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: var(--shadow-md); /* Use variable */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center; /* Vertically center items */
+    z-index: 1000;
+    width: 100%; /* Ensure it spans full width */
+}
+
+.header-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    background: var(--color-gradient); /* Use variable */
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-right: auto; /* Push nav to the right */
+    white-space: nowrap; /* Prevent title wrapping */
+}
+
+.nav {
+    display: flex;
+    gap: 1rem;
+    margin-left: auto; /* Aligns nav container to the right */
+}
+
+.nav-link {
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    color: #444; /* Default nav link color */
+    font-weight: 500;
+    /* Use variables for a smoother transition */
+    transition: background var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
+    white-space: nowrap; /* Prevent wrapping */
+}
+.header .nav-link:hover {
+    color: var(--color-primary-dark);
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px); /* Add subtle lift */
+}
+.header .nav-link.active {
+    color: var(--color-primary-dark);
+    background: rgba(255, 255, 255, 0.3);
+    font-weight: 600;
+}
+
+/* Logout Button */
+.header .nav-link.logout {
+    border: none;
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--color-danger); /* Use variable */
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    font-size: 1rem;
+    transition: var(--transition-fast); /* Use variable */
+}
+.header .nav-link.logout:hover {
+    background: var(--color-danger); /* Use variable */
+    color: white;
+    transform: scale(1.1) translateY(-2px); /* Add lift */
+    box-shadow: var(--shadow-danger-hover); /* Use variable */
+}
+
+/* Mobile Nav Toggle */
+.mobile-nav-toggle {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #333;
+    cursor: pointer;
+    margin-left: 1rem; /* Space from nav links */
+}
+
+/* Authentication Page Styles */
+.auth-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 100px 20px 40px; flex-direction: column; }
+/* --- MODIFICATION: Refined Glassmorphism Styles --- */
+.auth-box {
+    background: rgba(255, 255, 255, 0.3); /* Made slightly more opaque */
+    backdrop-filter: blur(18px); /* Increased blur slightly */
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(255, 255, 255, 0.3); /* Slightly stronger border */
+    border-radius: 20px;
+    box-shadow: var(--shadow-glass); /* Use variable */
+    position: relative;
+    overflow: hidden; /* Keep this to clip the overlay */
+    width: 768px;
+    max-width: 100%;
+    min-height: 480px;
+}
+/* --- MODIFICATION: Styles for single-form boxes --- */
+.auth-box-single {
+    /* Inherits glassmorphism from .auth-box */
+    min-height: auto; /* No fixed height */
+    display: flex; /* Use flex to center the form-container */
+    align-items: center; /* Center form-container vertically */
+    justify-content: center; /* Center form-container horizontally */
+    padding: 2.5rem; /* Adjusted padding */
+    width: 450px; /* Specific width */
+    max-width: 95%; /* Limit width slightly on smaller screens */
+}
+.auth-box-single .form-container {
+    padding: 0; /* Remove padding */
+    position: relative;
+    width: 100%;
+    height: auto;
+    display: flex; /* Use flex */
+    opacity: 1;
+    transform: none;
+    z-index: 1;
+    justify-content: center; /* Center form horizontally */
+    align-items: center; /* Center form vertically */
+    /* Remove background, it's handled by auth-box-single */
+}
+/* Style form inside single box */
+/* MODIFIED: Added 'form.form-container' to handle broken HTML structure */
+.auth-box-single .form-container form,
+.auth-box-single form.form-container {
+    padding: 0; /* No padding */
+    width: 100%; /* Full width */
+    display: flex;
+    flex-direction: column; /* Stack vertically */
+    align-items: center; /* Center horizontally */
+    justify-content: center; /* Center vertically */
+    text-align: center; /* Center text */
+    height: auto;
+}
+/* Style text elements within single form */
+.auth-box-single .form-container h1 {
+    margin-bottom: 1rem;
+    font-size: 1.8rem; /* Slightly smaller for single view */
+}
+.auth-box-single .form-container p {
+    color: #4b5563; /* MODIFIED: Matched color from inline style */
+    margin-bottom: 1.5rem;
+    max-width: 100%;
+    line-height: 1.5;
+    font-size: 1rem; /* Adjust size if needed */
+}
+.auth-box-single .input-group {
+    margin-bottom: 1rem;
+    width: 100%;
+}
+.auth-box-single .btn-primary {
+    margin-top: 1.5rem;
+    width: 100%;
+    padding: 14px 20px; /* Slightly larger padding */
+}
+.auth-box-single .forgot-link {
+    margin-top: 1.5rem;
+}
+/* --- END MODIFICATION --- */
+
+
+.form-container { position: absolute; top: 0; height: 100%; transition: all 0.6s ease-in-out; }
+.sign-in-container { left: 0; width: 50%; z-index: 2; }
+.auth-box.right-panel-active .sign-in-container { transform: translateX(100%); opacity: 0; /* Fade out */ }
+.sign-up-container { left: 0; width: 50%; opacity: 0; z-index: 1; transform: translateX(0); /* Start position */ }
+.auth-box.right-panel-active .sign-up-container { transform: translateX(100%); opacity: 1; z-index: 5; animation: show 0.6s; }
+@keyframes show { 0%, 49.99% { opacity: 0; z-index: 1; } 50%, 100% { opacity: 1; z-index: 5; } }
+/* General form styles (for dual view) */
+.auth-box .form-container form {
+    /* background: white; */ /* Still no solid background */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 0 50px; /* Padding for dual view */
+    height: 100%;
+    text-align: center;
+    width: 100%;
+}
+.form-container h1 { font-size: 2rem; margin-bottom: 1rem; color: #1f2937; font-weight: 700; }
+.input-group { position: relative; width: 100%; margin: 0.5rem 0; }
+.input-group i { position: absolute; top: 50%; left: 0.75rem; transform: translateY(-50%); color: #4b5563; z-index: 1; }
+.input-group input {
+    background: rgba(255, 255, 255, 0.5); /* Made slightly more opaque for readability */
+    border: 1px solid rgba(255, 255, 255, 0.4); /* Stronger border */
+    padding: 12px 15px 12px 40px;
+    width: 100%;
+    border-radius: 8px;
+    color: #111827;
+    font-weight: 500;
+    transition: var(--transition-fast); /* Use variable */
+}
+.input-group input::placeholder { color: #6b7280; }
+.input-group input:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.7); /* Clearer focus border */
+    background: rgba(255, 255, 255, 0.6); /* Slightly brighter focus background */
+    box-shadow: 0 0 0 3px rgba(142, 45, 226, 0.2); /* Stronger focus shadow */
+}
+.toggle-password { left: auto !important; right: 0.75rem !important; cursor: pointer; z-index: 2; color: #4b5563; }
+.error-message { color: #991b1b; background: rgba(254, 202, 202, 0.8); padding: 8px 12px; border-radius: 6px; font-size: 0.875rem; margin: 0.5rem 0; border: 1px solid rgba(220, 38, 38, 0.3); }
+/* --- Success Message Style --- */
+.form-message {
+    border-radius: 6px;
+    padding: 10px 15px;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+.form-message.success {
+    color: #0f5132;
+    background-color: rgba(209, 231, 221, 0.8);
+    border: 1px solid rgba(181, 211, 197, 0.3);
+}
+.form-message.error {
+    color: #991b1b;
+    background: rgba(254, 202, 202, 0.8);
+    border: 1px solid rgba(220, 38, 38, 0.3);
+}
+
+
+/* --- NEW: Forgot Password Link Style --- */
+.forgot-link {
+    font-size: 0.9rem;
+    color: var(--color-primary-dark);
+    text-decoration: none;
+    margin-top: 1rem;
+    transition: color var(--transition-fast);
+}
+.forgot-link:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
+}
+
+
+.btn-primary { 
+    border-radius: 20px; 
+    border: 1px solid var(--color-primary); 
+    background: var(--color-gradient); 
+    color: white; 
+    font-size: 12px; 
+    font-weight: bold; 
+    padding: 12px 45px; 
+    letter-spacing: 1px; 
+    text-transform: uppercase; 
+    cursor: pointer; 
+    margin-top: 1rem; 
+    transition: var(--transition-fast);
+}
+.btn-primary:hover { 
+    transform: scale(1.05) translateY(-2px); /* Add lift */
+    box-shadow: var(--shadow-primary-hover);
+}
+
+/* --- MODIFICATION: Apply curve to overlay-container --- */
+.overlay-container {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 50%;
+    height: 100%;
+    overflow: hidden; /* Keep this to clip the overlay */
+    transition: transform 0.6s ease-in-out, border-radius 0.6s ease-in-out;
+    z-index: 100;
+    /* Curve on the LEFT side initially (covering sign-up) */
+    border-radius: 150px 0 0 150px; /* Corrected: Curve on left */
+}
+.auth-box.right-panel-active .overlay-container {
+    transform: translateX(-100%);
+    /* Curve on the RIGHT side when active (covering sign-in) */
+    border-radius: 0 150px 150px 0; /* Corrected: Curve on right */
+}
+/* --- END MODIFICATION --- */
+
+
+/* --- MODIFICATION: Remove curve from overlay itself --- */
+.overlay {
+    background: var(--color-gradient); /* Use variable */
+    position: relative;
+    left: -100%;
+    height: 100%;
+    width: 200%;
+    transform: translateX(0);
+    transition: transform 0.6s ease-in-out; /* Only transition transform */
+    /* border-radius removed */
+}
+.auth-box.right-panel-active .overlay {
+    transform: translateX(50%);
+    /* border-radius removed */
+}
+/* --- END MODIFICATION --- */
+
+.overlay-panel { position: absolute; display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 0 40px; text-align: center; top: 0; height: 100%; width: 50%; transform: translateX(0); transition: transform 0.6s ease-in-out; color: white; }
+.overlay-left { transform: translateX(-20%); }
+.auth-box.right-panel-active .overlay-left { transform: translateX(0); }
+.overlay-right { right: 0; transform: translateX(0); }
+.auth-box.right-panel-active .overlay-right { transform: translateX(20%); }
+.overlay-panel h1 { font-size: 2rem; margin-bottom: 1rem; text-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.overlay-panel p { margin: 1.5rem 0 2rem; line-height: 1.5; font-size: 1.05rem; }
+.btn-ghost { 
+    background-color: transparent; 
+    border: 1px solid white; 
+    border-radius: 20px; 
+    color: white; 
+    font-size: 12px; 
+    font-weight: bold; 
+    padding: 12px 45px; 
+    letter-spacing: 1px; 
+    text-transform: uppercase; 
+    cursor: pointer; 
+    transition: var(--transition-fast);
+}
+.btn-ghost:hover { 
+    background-color: rgba(255, 255, 255, 0.15); 
+    transform: scale(1.03) translateY(-2px); /* Add lift */
+}
+.mobile-toggle-container { display: none; text-align: center; margin-top: 1.5rem; }
+.mobile-toggle-container p { color: #333; margin-bottom: 0.75rem; font-weight: 500; }
+.mobile-toggle-container .btn-ghost { color: var(--color-primary-dark); border-color: var(--color-primary-dark); }
+.mobile-toggle-container .btn-ghost:hover { background-color: rgba(74, 0, 224, 0.05); }
+
+/* Main Content Area */
+.main-content {
+    padding-top: calc(4rem + 40px); /* Adjust based on header height + extra space */
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Page Header (Used on Home & Profile) */
+.page-header {
+    margin-bottom: 2rem;
+}
+.page-header h2 {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: #222; /* Darker heading */
+}
+.page-header p {
+    font-size: 1.1rem;
+    color: #444; /* Slightly darker description */
+}
+
+/* --- NEW: Drag and Drop Zone --- */
+.drop-zone {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 2.5rem;
+    border: 3px dashed rgba(0, 0, 0, 0.15);
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #555;
+    text-align: center;
+    transition: var(--transition-medium);
+}
+
+.drop-zone i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: rgba(0, 0, 0, 0.3);
+}
+
+.drop-zone p {
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.drop-zone.dragover {
+    background-color: rgba(255, 255, 255, 0.4);
+    border-color: var(--color-primary-dark);
+    color: var(--color-primary-dark);
+}
+
+.drop-zone.dragover i {
+    color: var(--color-primary);
+}
+/* --- END NEW --- */
+
+
+/* Home Page Specific Controls */
+.top-controls { display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; margin-bottom: 2rem; flex-wrap: wrap; }
+/* General Search Bar Style (Applies to Home & Profile) */
+.search-bar { position: relative; flex-grow: 1; min-width: 250px; margin-bottom: 0; }
+.search-bar .fa-search { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #999; }
+.search-bar input { width: 100%; padding: 0.85rem 1rem 0.85rem 40px; border-radius: 8px; border: 1px solid #ddd; font-size: 1rem; transition: var(--transition-fast); background: #fff; /* Ensure white background */}
+.search-bar input:focus { 
+    outline: none; 
+    border-color: var(--color-primary); /* Use variable */
+    box-shadow: 0 0 0 4px rgba(142, 45, 226, 0.15); /* Use variable color */
+}
+/* Home Page Main Actions */
+.main-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+.main-actions .btn-primary { margin-top: 0; display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.25rem; }
+
+/* Tabs (Used on Home & Profile) */
+.tab-navigation { display: flex; gap: 0.5rem; flex-wrap: wrap; border-bottom: 2px solid #e5e7eb; margin-bottom: 2rem; }
+.tab-btn { 
+    padding: 0.75rem 0.25rem; 
+    margin-right: 2rem; 
+    font-size: 1.05rem; 
+    font-weight: 600; 
+    color: #555; 
+    border-bottom: 3px solid transparent; 
+    /* Use variable */
+    transition: color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast); 
+    background: none; 
+    border-top: none; 
+    border-left: none; 
+    border-right: none; 
+    cursor: pointer; 
+}
+.tab-btn:last-child { margin-right: 0; }
+.tab-btn:hover { 
+    color: #000; 
+    transform: translateY(-2px); /* Add lift */
+}
+.tab-btn.active { 
+    color: var(--color-primary-dark); /* Use variable */
+    border-bottom-color: var(--color-primary-dark); /* Use variable */
+}
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+/* General Content Card Styles (Home & Favorites) */
+.content-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; }
+.content-card { 
+    background-color: #fff; 
+    border-radius: 12px; 
+    box-shadow: var(--shadow-md); /* Use variable */
+    padding: 1rem; 
+    position: relative; 
+    transition: var(--transition-medium); /* Use variable */
+    border: 1px solid #eee; 
+    cursor: pointer; 
+    display: flex; 
+    flex-direction: column; 
+}
+.content-card:hover { 
+    transform: translateY(-6px); /* More lift */
+    box-shadow: var(--shadow-lg); /* Use variable */
+}
+.card-icon { font-size: 1.75rem; color: var(--color-primary-dark); margin-bottom: 1rem; }
+.card-icon img { width: 28px; height: 28px; border-radius: 4px; }
+.card-title { font-weight: 600; font-size: 1rem; margin: 0 0 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card-subtitle { font-size: 0.8rem; color: #888; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.shortcut-card { 
+    background: var(--color-gradient); /* Use variable */
+    color: white; 
+    align-items: center; 
+    justify-content: center; 
+    text-align: center; 
+    aspect-ratio: 1 / 1; 
+}
+.shortcut-card .card-icon { font-size: 2rem; color: white; }
+.shortcut-card .card-icon img { width: 40px; height: 40px; border-radius: 8px; background: rgba(255, 255, 255, 0.2); padding: 4px; }
+.shortcut-card .card-title { color: white; font-size: 1rem; }
+.shortcut-card .card-subtitle { color: rgba(255, 255, 255, 0.8); }
+.download-btn { 
+    position: absolute; 
+    top: 8px; 
+    right: 8px; 
+    width: 28px; 
+    height: 28px; 
+    background-color: #f0f0f0; 
+    color: #555; 
+    border-radius: 50%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    font-size: 0.8rem; 
+    text-decoration: none; 
+    opacity: 0; 
+    transform: scale(0.8); 
+    /* Use variable */
+    transition: opacity var(--transition-fast), transform var(--transition-fast), background-color var(--transition-fast); 
+    z-index: 2; 
+}
+.content-card:hover .download-btn { opacity: 1; transform: scale(1); }
+.download-btn:hover { background-color: #e0e0e0; color: #000; }
+
+/* File Viewer Modal */
+.viewer-modal-content { text-align: center; background-color: transparent; box-shadow: none; border: none; padding: 1rem; max-width: 90%; width: auto; margin: 2% auto; }
+.viewer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; color: white; }
+.viewer-header h2 { margin: 0; }
+.viewer-header .close { color: white; font-size: 40px; font-weight: bold; opacity: 0.8; transition: opacity 0.2s; cursor: pointer; }
+.viewer-header .close:hover { opacity: 1; }
+.viewer-body iframe { width: 100%; height: 75vh; border: none; background: white; border-radius: 8px; }
+
+/* Favorites Folder Styling */
+.folder-section { margin-bottom: 2.5rem; }
+.folder-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+.folder-header h3 { font-size: 1.5rem; font-weight: 600; color: #333; }
+.folder-header-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+.btn-add-items, .btn-delete-folder, .btn-rename-folder { padding: 0.4rem 0.8rem; border-radius: 8px; cursor: pointer; font-weight: 600; transition: background-color var(--transition-fast), transform var(--transition-fast); font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.35rem; }
+.btn-delete-folder { background: none; border: 1px solid var(--color-danger); color: var(--color-danger); }
+.btn-delete-folder:hover { background-color: #fee2e2; transform: translateY(-1px); }
+.btn-add-items { background: #3b82f6; border: 1px solid #3b82f6; color: white; }
+.btn-add-items:hover { background-color: #2563eb; transform: translateY(-1px); }
+/* --- NEW: Rename Button Style --- */
+.btn-rename-folder {
+    background: none;
+    border: 1px solid #6b7280;
+    color: #4b5563;
+}
+.btn-rename-folder:hover {
+    background-color: #f3f4f6;
+    transform: translateY(-1px);
+}
+/* --- END NEW --- */
+.btn-remove-item { 
+    position: absolute; 
+    top: 8px; 
+    right: 8px; 
+    width: 28px; 
+    height: 28px; 
+    background-color: #fee2e2; 
+    color: var(--color-danger); 
+    border-radius: 50%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    font-size: 0.8rem; 
+    text-decoration: none; 
+    opacity: 0; 
+    transform: scale(0.8); 
+    transition: var(--transition-fast); /* Use variable */
+    z-index: 2; 
+    border: none; 
+    cursor: pointer; 
+}
+.content-card:hover .btn-remove-item { opacity: 1; transform: scale(1); }
+.btn-remove-item:hover { background-color: #fecaca; color: #b91c1c; }
+.shortcut-card .btn-remove-item { background-color: rgba(255,255,255,0.2); color: white; }
+.shortcut-card .btn-remove-item:hover { background-color: rgba(255,255,255,0.4); }
+.add-items-modal-content { max-width: 700px; }
+.item-selection-list { max-height: 40vh; overflow-y: auto; border: 1px solid #eee; padding: 1rem; border-radius: 8px; margin-top: 1.5rem; }
+.item-selection-list label { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 0.5rem; border-radius: 6px; cursor: pointer; transition: background-color var(--transition-fast); }
+.item-selection-list label:hover { background-color: #f8f9fa; }
+.item-selection-list label input { width: 1.15rem; height: 1.15rem; accent-color: var(--color-primary-dark); }
+.item-selection-list label i { color: #666; width: 20px; text-align: center; }
+
+/* Form Messages (Success/Error) */
+/* .form-message defined above */
+
+/* --- UPDATED Modal Styles (Glassmorphism) --- */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1001;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5); /* Semi-transparent black background */
+    overflow: auto;
+    padding-top: 60px;
+    backdrop-filter: blur(5px); /* Blur background */
+    -webkit-backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background: rgba(255, 255, 255, 0.7); /* More opaque white for readability */
+    backdrop-filter: blur(15px); /* Blur effect on the modal content itself */
+    -webkit-backdrop-filter: blur(15px);
+    border-radius: 16px; /* More rounded corners */
+    border: 1px solid rgba(255, 255, 255, 0.3); /* Subtle white border */
+    box-shadow: var(--shadow-glass); /* Use variable */
+    color: #333; /* Darker text for readability */
+    margin: 5% auto;
+    padding: 2rem;
+    width: 90%;
+    max-width: 500px;
+    position: relative; /* Needed for close button positioning */
+}
+
+.close {
+    position: absolute; /* Position relative to modal-content */
+    top: 1rem;
+    right: 1rem;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #555; /* Darker close button */
+    text-shadow: none;
+    opacity: 0.7;
+    transition: opacity var(--transition-fast); /* Use variable */
+    background: none; /* Ensure no background */
+    border: none; /* Ensure no border */
+    padding: 0; /* Ensure no padding */
+}
+.close:hover {
+    color: #000;
+    opacity: 1;
+}
+
+.modal-content h2 {
+    color: #111; /* Even darker heading */
+    margin-bottom: 1.5rem; /* More space below heading */
+    text-align: center; /* Center heading */
+    font-weight: 600;
+}
+
+.form-group {
+    margin: 1rem 0;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #333; /* Darker label text */
+}
+
+.form-group-input,
+.form-group input[type="text"],
+.form-group input[type="file"],
+.form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid rgba(0,0,0,0.1); /* Lighter border */
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: 'Inter', sans-serif;
+    background: rgba(255,255,255,0.5); /* Semi-transparent input background */
+    transition: var(--transition-fast); /* Use variable */
+}
+
+.form-group input[type="text"]:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #a270ff; /* Purple focus border */
+    box-shadow: 0 0 0 3px rgba(74, 0, 224, 0.1); /* Purple focus shadow */
+}
+
+/* Specific Modal Button Styles */
+.modal-content .btn-primary { /* Style primary button inside modal */
+     margin-top: 1.5rem; /* Space above button */
+     width: 100%; /* Make button full width */
+     padding: 0.85rem; /* Adjust padding */
+}
+.modal-content .btn-outline { /* Style outline button inside modal */
+    width: 100%;
+}
+.modal-content .alert-modal-actions .btn-primary,
+.modal-content .alert-modal-actions .btn-outline {
+     width: auto; /* Revert width for side-by-side alert buttons */
+     flex: 1; /* Make buttons equal width in flex container */
+}
+
+
+/* Profile Picture Upload Modal Specific Styles */
+#profilePicInputFile { display: none; } /* Hide file input */
+.btn-file-choose {
+    display: inline-block;
+    padding: 0.75rem 1.25rem;
+    background-color: rgba(255,255,255,0.6);
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color var(--transition-fast); /* Use variable */
+    text-align: center;
+    width: 100%; /* Make button full width */
+}
+.btn-file-choose:hover {
+    background-color: rgba(255,255,255,0.9);
+}
+#selectedFileName {
+    margin-top: 1rem;
+    color: #555;
+    font-style: italic;
+    text-align: center; /* Center filename */
+    word-break: break-all;
+}
+
+/* Share Modal Radio Buttons */
+.share-options label {
+    display: block;
+    margin-bottom: 0.75rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: background-color var(--transition-fast); /* Use variable */
+}
+.share-options label:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+.share-options input[type="radio"] {
+    margin-right: 0.5rem;
+    accent-color: var(--color-primary-dark); /* Style radio button color */
+}
+
+/* --- End UPDATED Modal Styles --- */
+
+/* Empty State Placeholder */
+.empty-state { text-align: center; padding: 3rem; color: #999; grid-column: 1 / -1; background: rgba(255,255,255,0.1); border-radius: 12px; border: 1px dashed rgba(0,0,0,0.1); }
+.empty-state i { font-size: 3rem; margin-bottom: 1rem; color: rgba(0,0,0,0.3); }
+.empty-state.folder-empty { /* Specific style for empty folder */
+    padding: 2rem;
+    background-color: #fdfdfd;
+}
+.empty-state.folder-empty i { font-size: 2rem; }
+.empty-state.folder-empty h3 { font-size: 1.1rem; }
+
+
+/* Alert/Confirm Modal */
+.alert-modal-content { max-width: 400px; text-align: center; }
+.alert-modal-content h2 { margin-bottom: 0.5rem; }
+.alert-modal-content p { margin: 1rem 0 2rem; color: #666; }
+.alert-modal-actions { display: flex; justify-content: center; gap: 1rem; }
+.btn-outline { 
+    flex: 1; 
+    padding: 0.75rem; 
+    border: 1px solid #ccc; 
+    background: white; 
+    border-radius: 20px; 
+    text-decoration: none; 
+    color: #2d2d2d; 
+    font-size: 12px; 
+    font-weight: bold; 
+    letter-spacing: 1px; 
+    text-transform: uppercase; 
+    text-align: center; 
+    cursor: pointer; 
+    transition: var(--transition-fast); /* Use variable */
+}
+.btn-outline:hover { 
+    background-color: #eee; 
+    transform: translateY(-2px); /* Add lift */
+}
+
+
+/* ---------------------------------------------- */
+/* --- PROFILE PAGE SPECIFIC STYLES --- */
+/* ---------------------------------------------- */
+
+/* Animations */
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
+/* Profile Page Layout */
+.profile-container { display: grid; grid-template-columns: 320px 1fr; gap: 2rem; align-items: flex-start; }
+.profile-card { 
+    background: rgba(255, 255, 255, 0.25); 
+    backdrop-filter: blur(15px); 
+    -webkit-backdrop-filter: blur(15px); 
+    border: 1px solid rgba(255, 255, 255, 0.2); 
+    color: #333; 
+    padding: 2.5rem 2rem; 
+    border-radius: 16px; 
+    box-shadow: var(--shadow-glass); /* Use variable */
+    text-align: center; 
+    position: sticky; 
+    top: calc(4rem + 20px); 
+    animation: fadeInUp 0.6s ease-out; 
+}
+.profile-avatar-container { 
+    position: relative; 
+    width: 140px; 
+    height: 140px; 
+    margin: 0 auto 1.5rem; 
+    transition: transform var(--transition-medium); /* Use variable */
+}
+.profile-avatar-container:hover { transform: scale(1.05); }
+.profile-avatar-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 4px solid rgba(255, 255, 255, 0.7); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+.profile-avatar-edit-btn { 
+    position: absolute; 
+    bottom: 5px; 
+    right: 5px; 
+    background-color: white; 
+    color: var(--color-primary-dark); /* Use variable */
+    border: none; 
+    width: 36px; 
+    height: 36px; 
+    border-radius: 50%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    cursor: pointer; 
+    font-size: 1rem; 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3); 
+    transition: var(--transition-fast); /* Use variable */
+}
+.profile-avatar-edit-btn:hover { background-color: #f0f0f0; transform: scale(1.1); }
+.profile-card h2 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem; color: #222; }
+.profile-suc, .profile-date { font-size: 1rem; color: #444; margin: 0.25rem 0; word-break: break-all; }
+.profile-date { font-size: 0.9rem; color: #555; }
+.stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); margin-top: 2.5rem; gap: 1.5rem; }
+.stat-card { 
+    background: rgba(255, 255, 255, 0.2); 
+    padding: 1.5rem 1rem; 
+    border-radius: 12px; 
+    border: 1px solid rgba(255, 255, 255, 0.15); 
+    transition: background-color var(--transition-medium); /* Use variable */
+    text-align: center; 
+}
+.stat-card:hover { background: rgba(255, 255, 255, 0.3); }
+.stat-icon { font-size: 1.5rem; color: #333; background: rgba(255, 255, 255, 0.25); width: 48px; height: 48px; border-radius: 50%; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; }
+.stat-card h3 { font-size: 2rem; color: #222; margin: 0.75rem 0 0.25rem; font-weight: 700; }
+.stat-card p { font-size: 0.9rem; color: #444; margin: 0; }
+
+/* --- NEW: Delete Account Button Style --- */
+.btn-danger {
+    background-color: var(--color-danger); /* Use variable */
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-fast); /* Use variable */
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.btn-danger:hover {
+    background-color: var(--color-danger-dark); /* Use variable */
+    transform: translateY(-2px); /* Add lift */
+    box-shadow: var(--shadow-danger-hover); /* Use variable */
+}
+.delete-account-btn {
+    margin-top: 2rem; /* Space above the button */
+    width: 100%; /* Make button full width */
+    justify-content: center; /* Center icon and text */
+}
+
+
+/* Content Management Area within Profile */
+.content-management-area {
+    background: #ffffff; /* Solid white background */
+    border-radius: 20px;
+    border: 1px solid #e5e7eb; /* Light border */
+    box-shadow: var(--shadow-lg); /* Use variable */
+    padding: 2rem;
+    animation: fadeInUp 0.8s ease-out;
+}
+.content-management-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+.content-management-header h3 { /* Style the heading */
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #333;
+    margin: 0; /* Remove default margin */
+}
+/* Ensure profile search bar uses general search bar styles */
+.profile-search-bar {
+    margin-bottom: 0;
+    min-width: 200px;
+    flex-grow: 0; /* Prevents it taking too much space if header wraps */
+}
+.content-management-area .search-bar input { /* Ensure white background */
+    background: #fff;
+    border-color: #ddd; /* Ensure border is visible */
+}
+.content-management-area .search-bar input:focus {
+     border-color: var(--color-primary); /* Use variable */
+     box-shadow: 0 0 0 4px rgba(142, 45, 226, 0.15); /* Use variable color */
+}
+
+/* Ensure tabs within content management area use general tab styles */
+.content-management-area .tab-navigation {
+     /* Inherits border-bottom from general rule */
+     margin-bottom: 2rem; /* Inherits margin */
+}
+.content-management-area.tab-btn {
+     /* Inherits padding, margin-right, font-size, font-weight, color, border-bottom, transition, cursor */
+}
+.content-management-area .tab-btn:hover { color: #000; }
+.content-management-area .tab-btn.active { 
+    color: var(--color-primary-dark); /* Use variable */
+    border-bottom-color: var(--color-primary-dark); /* Use variable */
+}
+.content-management-area .tab-pane { display: none; }
+.content-management-area .tab-pane.active { display: block; }
+
+/* Bulk Actions Bar within Profile */
+.bulk-actions { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+.select-all-btn, .bulk-actions-btn { background: none; border: none; padding: 0; font-size: inherit; color: inherit; cursor: pointer; }
+.bulk-action-icon-btn { 
+    background: #f9fafb; 
+    border: 1px solid #e5e7eb; 
+    border-radius: 50%; 
+    width: 44px; 
+    height: 44px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    font-size: 1.1rem; 
+    color: #333; 
+    cursor: pointer; 
+    transition: var(--transition-medium); /* Use variable */
+    box-shadow: var(--shadow-sm); /* Use variable */
+}
+.bulk-action-icon-btn:hover { 
+    background: #ffffff; 
+    color: var(--color-primary-dark); 
+    transform: translateY(-2px) scale(1.05); 
+    box-shadow: 0 6px 15px rgba(74, 0, 224, 0.15); 
+}
+.bulk-action-icon-btn.delete-btn { color: var(--color-danger); }
+.bulk-action-icon-btn.delete-btn:hover { 
+    background: var(--color-danger); 
+    color: white; 
+    box-shadow: var(--shadow-danger-hover); 
+}
+.bulk-action-icon-btn.favorite-btn { color: #f59e0b; }
+.bulk-action-icon-btn.favorite-btn:hover { background: #f59e0b; color: white; box-shadow: 0 6px 15px rgba(245, 158, 11, 0.3); }
+.bulk-action-icon-btn.share-btn { color: #3b82f6; }
+.bulk-action-icon-btn.share-btn:hover { background: #3b82f6; color: white; box-shadow: 0 6px 15px rgba(59, 130, 246, 0.3); }
+.select-all-btn { font-size: 1.1rem; } /* Select all specific styling */
+
+/* Grid for Profile Items */
+.profile-content-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 1.5rem; }
+
+/* Card Styling for Profile Items - Ensure these styles apply */
+/* Make the selector more specific to override potential conflicts */
+.content-management-area .profile-item-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    transition: var(--transition-medium); /* Use variable */
+    padding: 1.5rem;
+    animation: popIn 0.5s ease-out forwards;
+    opacity: 0;
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+    box-shadow: var(--shadow-md); /* Use variable */
+}
+.content-management-area .profile-item-card.selected { 
+    background: rgba(230, 220, 255, 0.9); 
+    border-color: var(--color-primary-dark); /* Use variable */
+    box-shadow: 0 8px 25px rgba(74, 0, 224, 0.1); 
+}
+.content-management-area .profile-item-icon { 
+    font-size: 2.5rem; 
+    color: var(--color-primary-dark); /* Use variable */
+    background: linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.9) 100%); 
+    border-radius: 16px; 
+    width: 70px; 
+    height: 70px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    flex-shrink: 0; 
+    border: 1px solid rgba(255, 255, 255, 0.8); 
+    box-shadow: var(--shadow-sm); /* Use variable */
+    transition: var(--transition-medium); /* Use variable */
+    margin-top: 1rem; 
+    margin-bottom: 1rem; 
+}
+.content-management-area .profile-item-card:hover .profile-item-icon { 
+    transform: scale(1.1) rotate(-5deg); 
+    color: white; 
+    background: var(--color-gradient); /* Use variable */
+    box-shadow: 0 6px 20px rgba(74, 0, 224, 0.35); 
+}
+.content-management-area .profile-item-icon .shortcut-favicon { width: 36px; height: 36px; border-radius: 8px; transition: transform var(--transition-medium); }
+.content-management-area .profile-item-card:hover .profile-item-icon .shortcut-favicon { transform: scale(1.1); }
+.content-management-area .profile-item-content { flex-grow: 1; min-width: 0; text-align: center; width: 100%; }
+.content-management-area .profile-item-card:hover { 
+    transform: translateY(-8px); 
+    background: #ffffff; 
+    box-shadow: 0 12px 35px rgba(74, 0, 224, 0.25); /* Stronger shadow */
+    border-color: var(--color-primary); /* Use variable */
+}
+.content-management-area .profile-item-card h4 { 
+    font-size: 1.1rem; 
+    font-weight: 600; 
+    color: #222; 
+    margin: 0.5rem 0 0.25rem; 
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+    transition: color var(--transition-fast); /* Use variable */
+    width: 100%; 
+}
+.content-management-area .profile-item-card:hover h4 { color: var(--color-primary-dark); }
+.content-management-area .profile-item-card p { font-size: 0.9rem; color: #888; margin: 0 0 1rem 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.content-management-area .profile-item-card .card-actions { 
+    position: absolute; 
+    bottom: -50px; 
+    left: 0; 
+    right: 0; 
+    display: flex; 
+    gap: 0.5rem; 
+    justify-content: center; 
+    padding: 0.75rem 1rem; 
+    background: linear-gradient(180deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,1) 100%); 
+    border-top: 1px solid rgba(0,0,0,0.05); 
+    opacity: 0; 
+    transition: var(--transition-medium); /* Use variable */
+    z-index: 3; 
+}
+.content-management-area .profile-item-card:hover .card-actions { opacity: 1; bottom: 0; }
+.content-management-area .action-btn { 
+    background: rgba(0, 0, 0, 0.05); 
+    border: 1px solid rgba(0, 0, 0, 0.1); 
+    border-radius: 50%; 
+    width: 32px; 
+    height: 32px; 
+    font-size: 0.9rem; 
+    color: #555; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    transition: var(--transition-fast); /* Use variable */
+    cursor: pointer; 
+}
+.content-management-area .action-btn:hover { 
+    background: var(--color-primary-dark); 
+    color: white; 
+    border-color: var(--color-primary-dark); 
+    transform: scale(1.1); 
+}
+.content-management-area .action-btn.delete { color: var(--color-danger); }
+.content-management-area .action-btn.delete:hover { 
+    background: var(--color-danger); 
+    color: white; 
+    border-color: var(--color-danger); 
+}
+.content-management-area .profile-item-card .select-checkbox { 
+    position: absolute; 
+    top: 1rem; 
+    left: 1rem; 
+    opacity: 0.5; 
+    width: 1.15rem; 
+    height: 1.15rem; 
+    accent-color: var(--color-primary-dark); 
+    transition: var(--transition-fast); /* Use variable */
+    z-index: 2; 
+    cursor: pointer; 
+}
+.content-management-area .profile-item-card:hover .select-checkbox,
+.content-management-area .profile-item-card .select-checkbox:checked { opacity: 1; }
+
+
+/* --- MODIFICATION: Styles moved from share.php --- */
+.share-container {
+    background-color: #fff;
+    padding: 3rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow-lg); /* Use variable */
+    text-align: center;
+    max-width: 500px;
+    width: 100%;
+}
+.share-container h2 {
+    margin-top: 0;
+    font-size: 1.75rem; /* Larger icon and text */
+    color: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+}
+.share-container p {
+    color: #666;
+    font-size: 1.1rem; /* Slightly larger */
+}
+/* Style the button on the share page */
+.share-container .btn-primary {
+    text-decoration: none;
+    display: inline-flex; /* Use flex to align icon and text */
+    align-items: center;
+    gap: 0.5rem; /* Space between icon and text */
+    margin-top: 1.5rem;
+    font-size: 14px; /* Made text slightly larger */
+    padding: 14px 45px; /* Increased padding */
+}
+/* --- END MODIFICATION --- */
+/* --- Footer Style --- */
+.footer {
+    text-align: center;
+    padding: 2rem 0;
+    color: #666; /* Adjusted color */
+    font-size: 0.9em;
+    margin-top: 2rem; /* Add some space above the footer */
+    background: rgba(255, 255, 255, 0.1); /* Subtle background */
+    border-top: 1px solid rgba(0,0,0,0.05); /* Light top border */
+}
+
+
+/* --- Responsive Adjustments --- */
+@media (max-width: 992px) {
+    .profile-container { grid-template-columns: 1fr; }
+    .profile-card { position: static; margin-bottom: 2rem; /* Add margin when stacked */}
+    .content-management-header { flex-direction: column; align-items: stretch; }
+    .profile-search-bar { order: -1; margin-bottom: 1rem; }
+}
+
+@media (max-width: 768px) {
+    .header { padding: 0.75rem 1rem; }
+    .main-content { padding-top: calc(3.5rem + 20px); }
+    /* .profile-card { top: calc(3.D5rem + 20px); } No longer sticky on mobile */
+    .profile-content-grid { grid-template-columns: 1fr; gap: 1rem; }
+    .content-management-area .profile-item-card { padding: 1.5rem; } /* Target more specifically */
+    .bulk-actions { flex-direction: column; align-items: stretch; }
+    .bulk-action-icon-btn { justify-content: center; width: 100%; border-radius: 8px; margin-bottom: 0.5rem; }
+    .bulk-action-icon-btn:last-child { margin-bottom: 0; }
+
+    /* Mobile Nav Styles */
+    .mobile-nav-toggle { display: block; z-index: 1002; }
+    .nav { position: fixed; top: 0; right: -100%; width: 70%; max-width: 300px; height: 100vh; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: -4px 0 12px rgba(0,0,0,0.1); flex-direction: column; padding-top: 5rem; gap: 0; transition: right 0.3s ease-in-out; z-index: 1001; }
+    .nav.active { right: 0; }
+    .nav-link { padding: 1.25rem 1.5rem; border-radius: 0; border-bottom: 1px solid rgba(0,0,0,0.05); color: #333; }
+    .nav-link.active { border-radius: 0; background: rgba(74, 0, 224, 0.1); color: var(--color-primary-dark); }
+    .header .nav-link.logout { width: auto; height: auto; border-radius: 0; background: none; color: var(--color-danger); font-size: 1rem; padding: 1.25rem 1.5rem; border-bottom: 1px solid rgba(0,0,0,0.05); justify-content: flex-start; }
+    .header .nav-link.logout:hover { background: rgba(239, 68, 68, 0.1); color: var(--color-danger); transform: none; box-shadow: none; }
+    .header .nav-link.logout::after { content: "Logout"; margin-left: 0.75rem; font-weight: 500;}
+
+     /* Other Mobile Adjustments */
+     .container { padding: 1rem; }
+     .page-header h2 { font-size: 1.75rem; }
+     .page-header p { font-size: 1rem; }
+     .top-controls { flex-direction: column; align-items: stretch; }
+     .main-actions {
+        flex-direction: row; /* Make buttons a row */
+        flex-wrap: nowrap; /* Prevent wrapping */
+        justify-content: center; /* Center the buttons */
+        margin-top: 1rem; /* Add some space above the buttons */
+     }
+     .main-actions .btn-primary { justify-content: center; }
+     .tab-navigation { justify-content: space-around; gap: 0.25rem; }
+     .tab-btn { padding: 0.75rem 0.5rem; font-size: 0.9rem; flex-grow: 1; text-align: center; margin-right: 0; }
+     .content-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.75rem; } /* Applied only to general content grid */
+     .profile-content-grid { grid-template-columns: 1fr; gap: 1rem; } /* Specific rule for profile grid on mobile */
+     .card-title { font-size: 0.9rem; } /* General card title */
+     .content-management-area .profile-item-card h4 { font-size: 1rem; /* Adjust profile card title size for mobile */}
+     .folder-header { flex-direction: column; align-items: stretch; }
+     .folder-header-actions { flex-direction: column; }
+     .btn-add-items, .btn-delete-folder { justify-content: center; }
+     .modal-content { width: 95%; padding: 1.5rem; margin: 10% auto; }
+     .viewer-modal-content { padding: 0.5rem; }
+     .viewer-header h2 { font-size: 1.2rem; }
+     .viewer-body iframe { height: 70vh; }
+
+     /* --- MODIFICATION: Auth box responsiveness --- */
+    .auth-box {
+        width: 95%; /* Use more width on mobile */
+        min-height: auto; /* Allow height to adjust based on content */
+        margin-top: 1rem;
+        display: flex; /* Use flex for mobile layout */
+        flex-direction: column; /* Stack vertically */
+    }
+    .form-container {
+        width: 100%; /* Forms take full width */
+        position: relative; /* Change from absolute */
+        height: auto; /* Auto height */
+        padding: 2rem 1.5rem; /* Adjust padding */
+        transform: none !important; /* Reset transform */
+        opacity: 1 !important; /* Ensure always visible */
+        z-index: 1 !important; /* Reset z-index */
+        display: none; /* Hide both initially */
+    }
+     /* Initially show sign-in form */
+     .sign-in-container { display: flex; }
+
+     /* Toggle display using JS based on state */
+    .auth-box.right-panel-active .sign-in-container { display: none; }
+    .auth-box.right-panel-active .sign-up-container { display: flex; }
+
+    .overlay-container { display: none; } /* Hide overlay on mobile */
+
+    /* --- Styles for single auth box on mobile --- */
+    .auth-box-single {
+        display: block; /* Overwrite flex */
+        width: 95%;
+        margin-top: 1rem;
+        padding: 1.5rem; /* Adjust padding */
+    }
+    .auth-box-single .form-container {
+        display: flex; /* Show the form inside */
+        position: relative;
+        width: 100%;
+        padding: 0; /* Remove inner padding */
+    }
+
+
+    .mobile-toggle-container {
+        display: block; /* Show mobile toggle links */
+        order: 1; /* Make it appear after the forms in flex layout */
+        width: 100%; /* Take full width */
+        padding: 1rem 1.5rem;
+        background: rgba(255, 255, 255, 0.3); /* Match glass effect */
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        border-top: 1px solid rgba(255, 255, 255, 0.2); /* Match glass effect */
+        border-radius: 0 0 20px 20px; /* Round bottom corners */
+     }
+     /* Ensure the forms have correct order */
+     .sign-in-container, .sign-up-container { order: 0; }
+
+     .form-container form { padding: 0 1rem; } /* Reduce horizontal padding inside forms */
+     .input-group input { padding: 10px 10px 10px 35px; } /* Adjust input padding */
+     .input-group i { left: 0.5rem; } /* Adjust icon position */
+     .toggle-password { right: 0.5rem !important; } /* Adjust toggle icon position */
+     .btn-primary, .btn-ghost { padding: 10px 30px; } /* Adjust button padding */
+     .form-container h1 { font-size: 1.75rem; } /* Slightly smaller heading */
+    /* --- END MODIFICATION --- */
+
+}
+
+/* --- ADDED FROM style_updates.css --- */
+/* First, styles for the new logo buttons */
+.btn-logo {
+    background-color: #4A00E0; /* Main theme color */
+    color: #ffffff;
+    border: none;
+    width: 50px;  /* Fixed width */
+    height: 50px; /* Fixed height */
+    border-radius: 50%; /* Make it a circle */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem; /* Larger icon */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    margin: 0 0.25rem; /* Tighter margin */
+}
+
+.btn-logo:hover {
+    background-color: #5a10e0; /* Slightly lighter purple */
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+.btn-logo:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* This rule targets mobile screens specifically.
+   It overrides any 'flex-wrap: wrap' or 'flex-direction: column'
+   that might be set for .main-actions on mobile.
+*/
+/* --- This block is no longer needed, the change is above --- */
+/* --- END OF ADDED STYLES --- */
+
+@media (max-width: 600px) {
+            .header-title { flex: 1; }
+            /* Ensure mobile toggle is visible if style.css hides it by default or vice versa */
+            .mobile-nav-toggle { display: block; } 
+        }
+/* inferred from context or standard behavior */
+position: absolute;
+top: 10px;
+right: 10px;

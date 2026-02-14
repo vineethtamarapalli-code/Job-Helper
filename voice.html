@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vocalize - Translate & Speak</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Document Parsing Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            overscroll-behavior-y: none; 
+        }
+
+        /* Audio Wave Animation */
+        .audio-wave {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 30px;
+            gap: 3px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .audio-wave.active {
+            opacity: 1;
+        }
+
+        .bar {
+            width: 4px;
+            height: 100%;
+            background: #4f46e5;
+            border-radius: 2px;
+            animation: wave 1s ease-in-out infinite;
+        }
+
+        .bar:nth-child(1) { animation-duration: 0.8s; height: 40%; }
+        .bar:nth-child(2) { animation-duration: 0.6s; height: 70%; }
+        .bar:nth-child(3) { animation-duration: 0.9s; height: 50%; }
+        .bar:nth-child(4) { animation-duration: 0.5s; height: 80%; }
+        .bar:nth-child(5) { animation-duration: 0.7s; height: 60%; }
+
+        @keyframes wave {
+            0%, 100% { transform: scaleY(0.5); }
+            50% { transform: scaleY(1); }
+        }
+
+        .loader {
+            border: 2px solid #e0e7ff;
+            border-top: 2px solid #4f46e5;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Recording Pulse Animation */
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        
+        .recording-active {
+            color: #ef4444 !important; /* red-500 */
+            animation: pulse-red 2s infinite;
+            border-radius: 50%;
+        }
+
+        /* Select styling */
+        .custom-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        
+        /* Drag and Drop Highlight */
+        .drag-active {
+            border-color: #6366f1 !important; /* indigo-500 */
+            background-color: #e0e7ff !important; /* indigo-100 */
+        }
+
+        /* --- Cross-Browser Range Slider Styling --- */
+        input[type=range] {
+            -webkit-appearance: none;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        /* Webkit (Chrome, Safari, Edge) */
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #4f46e5;
+            margin-top: -6px; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            background: #e5e7eb;
+            border-radius: 2px;
+        }
+
+        /* Firefox */
+        input[type=range]::-moz-range-thumb {
+            height: 16px;
+            width: 16px;
+            border: none;
+            border-radius: 50%;
+            background: #4f46e5;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        input[type=range]::-moz-range-track {
+            width: 100%;
+            height: 4px;
+            background: #e5e7eb;
+            border-radius: 2px;
+        }
+
+        /* Seek Slider Specifics */
+        input[type=range].seek-slider::-webkit-slider-thumb {
+            height: 12px;
+            width: 12px;
+            margin-top: -4px;
+        }
+        input[type=range].seek-slider::-webkit-slider-runnable-track {
+            background: #e0e7ff;
+        }
+        input[type=range].seek-slider::-moz-range-thumb {
+            height: 12px;
+            width: 12px;
+        }
+        input[type=range].seek-slider::-moz-range-track {
+            background: #e0e7ff;
+        }
+
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 pb-20 sm:pb-6">
+
+    <div class="w-full max-w-3xl bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col md:flex-row h-auto md:h-[750px] relative">
+        
+        <!-- Left Panel: Settings -->
+        <div class="w-full md:w-1/3 bg-slate-50 border-r border-gray-100 p-6 flex flex-col justify-between order-2 md:order-1">
+            <div>
+                <div class="flex items-center gap-3 mb-6 md:mb-8">
+                    <div class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-200">
+                        <i class="fas fa-language"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-800">Vocalize</h1>
+                        <p class="text-xs text-gray-400">Translate & Speak</p>
+                    </div>
+                </div>
+
+                <!-- Language Selection -->
+                <div class="mb-5">
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Target Language</label>
+                    <select id="language-select" class="custom-select w-full p-3 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm cursor-pointer transition-shadow hover:shadow">
+                        <option value="English">English</option>
+                        <option value="Spanish">Spanish (Español)</option>
+                        <option value="French">French (Français)</option>
+                        <option value="German">German (Deutsch)</option>
+                        <option value="Hindi">Hindi (हिन्दी)</option>
+                        <option value="Telugu">Telugu (తెలుగు)</option>
+                        <option value="Japanese">Japanese (日本語)</option>
+                        <option value="Chinese">Chinese (中文)</option>
+                        <option value="Russian">Russian (Русский)</option>
+                        <option value="Portuguese">Portuguese (Português)</option>
+                        <option value="Italian">Italian (Italiano)</option>
+                        <option value="Korean">Korean (한국어)</option>
+                        <option value="Arabic">Arabic (العربية)</option>
+                    </select>
+                </div>
+
+                <!-- Voice Selection -->
+                <div class="mb-5">
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Voice Tone</label>
+                    <select id="voice-select" class="custom-select w-full p-3 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm cursor-pointer transition-shadow hover:shadow">
+                        <option value="Kore">Kore (Female, Balanced)</option>
+                        <option value="Fenrir">Fenrir (Male, Deep)</option>
+                        <option value="Puck">Puck (Male, Energetic)</option>
+                        <option value="Aoede">Aoede (Female, Soft)</option>
+                    </select>
+                </div>
+
+                <!-- File Upload -->
+                <div class="mb-5 border-t pt-4 border-gray-200">
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Upload Document</label>
+                    <label id="drop-zone" class="flex items-center justify-center w-full p-3 bg-white border border-dashed border-indigo-300 rounded-lg cursor-pointer hover:bg-indigo-50 hover:border-indigo-400 transition-all group relative">
+                        <div class="flex items-center gap-2 text-indigo-600 group-hover:text-indigo-700 pointer-events-none">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span class="text-sm font-medium">Tap or Drop File</span>
+                        </div>
+                        <input type="file" id="file-upload" accept=".txt,.pdf,.docx,.doc,image/png,image/jpeg,image/webp" class="hidden" />
+                    </label>
+                    <p class="text-[10px] text-gray-400 mt-1 text-center">PDF, DOCX, TXT & Images</p>
+                </div>
+
+                <!-- Playback Controls Container -->
+                <div class="grid grid-cols-1 gap-4">
+                    <!-- Speed -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Speed</label>
+                            <span id="speed-value" class="text-xs text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded">1.0x</span>
+                        </div>
+                        <input type="range" id="speed-range" min="0.5" max="2.0" step="0.1" value="1.0" class="w-full">
+                    </div>
+
+                    <!-- Volume -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Volume</label>
+                            <span id="volume-value" class="text-xs text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded">100%</span>
+                        </div>
+                        <input type="range" id="volume-range" min="0" max="1" step="0.1" value="1" class="w-full">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Indicator -->
+            <div class="mt-6 border-t border-gray-200 pt-6">
+                 <div class="flex items-center justify-between h-8">
+                    <span id="status-text" class="text-xs font-medium text-gray-400">Ready</span>
+                    <div class="audio-wave" id="visualizer">
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                    </div>
+                 </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Text Input & Actions -->
+        <div class="w-full md:w-2/3 p-6 flex flex-col bg-white relative order-1 md:order-2 h-[500px] md:h-auto">
+            
+            <div class="flex justify-between items-center mb-4">
+                <label class="text-sm font-semibold text-gray-700">Enter or Upload Text</label>
+                <div class="flex items-center gap-2">
+                    <!-- Dictate Button -->
+                    <button id="mic-btn" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium transition-colors flex items-center gap-1 px-2 py-1 rounded hover:bg-indigo-50 hidden" title="Voice Typing">
+                        <i class="fas fa-microphone"></i> <span>Dictate</span>
+                    </button>
+                    <div id="btn-sep" class="h-4 w-px bg-gray-200 hidden"></div>
+                    <button id="clear-btn" class="text-xs text-red-500 hover:text-red-700 font-medium transition-colors">
+                        Clear
+                    </button>
+                </div>
+            </div>
+
+            <textarea id="text-input" 
+                class="flex-1 w-full p-4 bg-gray-50 border border-gray-100 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-gray-700 leading-relaxed text-lg placeholder-gray-400 mb-6"
+                placeholder="Type here, dictate, or drag & drop a file..."></textarea>
+            
+            <!-- Translated Text Preview -->
+            <div id="translated-preview" class="hidden mb-6 p-3 bg-indigo-50 border border-indigo-100 rounded-lg">
+                <p class="text-xs text-indigo-400 uppercase font-bold mb-1">Translation</p>
+                <p id="translated-text-content" class="text-sm text-indigo-900 italic max-h-32 overflow-y-auto"></p>
+            </div>
+
+            <!-- Timeline Audio Controls -->
+            <div id="timeline-controls" class="hidden mb-6 p-4 bg-gray-50 rounded-xl border border-gray-100 flex flex-col gap-2">
+                <div class="flex justify-between items-center text-xs font-medium text-gray-500 mb-1">
+                    <span id="current-time">0:00</span>
+                    <span id="duration-time">0:00</span>
+                </div>
+                <input type="range" id="seek-bar" value="0" max="100" class="seek-slider w-full">
+                
+                <!-- Pause/Resume Controls -->
+                <div class="flex justify-center gap-4 mt-1">
+                    <button id="pause-audio-btn" class="text-sm font-medium text-gray-600 hover:text-indigo-600 flex items-center gap-2 transition-colors">
+                        <i class="fas fa-pause"></i> Pause
+                    </button>
+                    <button id="resume-audio-btn" class="hidden text-sm font-medium text-gray-600 hover:text-indigo-600 flex items-center gap-2 transition-colors">
+                        <i class="fas fa-play"></i> Resume
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 mt-auto md:mt-0">
+                <button id="play-btn" class="col-span-1 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-xl font-semibold shadow-lg shadow-indigo-200 transform transition hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2">
+                    <i class="fas fa-play"></i> <span>Play</span>
+                </button>
+
+                <button id="download-btn" class="col-span-1 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-3 rounded-xl font-semibold transform transition hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2">
+                    <i class="fas fa-download"></i> <span>Download</span>
+                </button>
+            </div>
+
+            <button id="stop-btn" class="mt-3 w-full bg-red-50 text-red-600 hover:bg-red-100 py-2 rounded-lg text-sm font-medium transition-colors hidden">
+                <i class="fas fa-stop mr-2"></i> Stop Playback
+            </button>
+
+            <!-- Loading / Status Bar (Moved to bottom with Cancel) -->
+            <div id="loading-overlay" class="mt-4 w-full bg-indigo-50 border border-indigo-100 rounded-xl p-4 hidden flex-row items-center justify-between gap-4 transition-all">
+                <div class="flex items-center gap-3">
+                    <div class="loader" style="width: 20px; height: 20px; border-width: 2px;"></div>
+                    <p id="loading-text" class="text-sm font-medium text-indigo-700">Processing...</p>
+                </div>
+                <button id="cancel-btn" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-white border border-indigo-200 hover:bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg text-sm opacity-0 transition-opacity duration-300 pointer-events-none z-50 whitespace-nowrap">
+        Notification
+    </div>
+
+    <script>
+        // API Key (Runtime)
+        const apiKey = ""; 
+
+        // Set Worker for PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        // DOM Elements
+        const textInput = document.getElementById('text-input');
+        const languageSelect = document.getElementById('language-select');
+        const voiceSelect = document.getElementById('voice-select');
+        const playBtn = document.getElementById('play-btn');
+        const downloadBtn = document.getElementById('download-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const micBtn = document.getElementById('mic-btn');
+        const btnSep = document.getElementById('btn-sep');
+        const visualizer = document.getElementById('visualizer');
+        const statusText = document.getElementById('status-text');
+        const loadingOverlay = document.getElementById('loading-overlay'); // Now a bottom bar
+        const loadingText = document.getElementById('loading-text');
+        const cancelBtn = document.getElementById('cancel-btn'); // New Cancel Button
+        const translatedPreview = document.getElementById('translated-preview');
+        const translatedTextContent = document.getElementById('translated-text-content');
+        const fileUpload = document.getElementById('file-upload');
+        const dropZone = document.getElementById('drop-zone');
+        
+        // Controls
+        const speedRange = document.getElementById('speed-range');
+        const speedValue = document.getElementById('speed-value');
+        const volumeRange = document.getElementById('volume-range');
+        const volumeValue = document.getElementById('volume-value');
+        const timelineControls = document.getElementById('timeline-controls');
+        const seekBar = document.getElementById('seek-bar');
+        const currentTimeDisplay = document.getElementById('current-time');
+        const durationTimeDisplay = document.getElementById('duration-time');
+        const pauseAudioBtn = document.getElementById('pause-audio-btn');
+        const resumeAudioBtn = document.getElementById('resume-audio-btn');
+
+        // State
+        let currentAudio = null;
+        let recognition = null;
+        let isRecording = false;
+        let isStopped = false;
+        
+        let audioQueue = [];
+        let allPcmChunks = [];
+        let isPlayingQueue = false;
+        let isDownloadMode = false;
+
+        // --- Helper Functions ---
+
+        function showLoading(show, text = "Processing...") {
+            loadingText.textContent = text;
+            if (show) {
+                loadingOverlay.classList.remove('hidden');
+                loadingOverlay.classList.add('flex');
+            } else {
+                loadingOverlay.classList.add('hidden');
+                loadingOverlay.classList.remove('flex');
+            }
+        }
+
+        function showNotification(msg) {
+            const notif = document.getElementById('notification');
+            notif.textContent = msg;
+            notif.style.opacity = '1';
+            setTimeout(() => { notif.style.opacity = '0'; }, 3000);
+        }
+
+        function resetUI() {
+            visualizer.classList.remove('active');
+            stopBtn.classList.add('hidden');
+            statusText.textContent = "Ready";
+            statusText.classList.remove('text-indigo-600');
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        function base64ToArrayBuffer(base64) {
+            const binaryString = window.atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
+        function writeWavHeader(samples, sampleRate = 24000, numChannels = 1, bitDepth = 16) {
+            const buffer = new ArrayBuffer(44 + samples.length * 2);
+            const view = new DataView(buffer);
+            const writeString = (view, offset, string) => {
+                for (let i = 0; i < string.length; i++) view.setUint8(offset + i, string.charCodeAt(i));
+            };
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, 36 + samples.length * 2, true);
+            writeString(view, 8, 'WAVE');
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true);
+            view.setUint16(22, numChannels, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * numChannels * (bitDepth / 8), true);
+            view.setUint16(32, numChannels * (bitDepth / 8), true);
+            view.setUint16(34, bitDepth, true);
+            writeString(view, 36, 'data');
+            view.setUint32(40, samples.length * 2, true);
+            let offset = 44;
+            for (let i = 0; i < samples.length; i++, offset += 2) view.setInt16(offset, samples[i], true);
+            return buffer;
+        }
+
+        // --- Speech Recognition Setup (Cross-Browser Safe) ---
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            
+            // Show the button only if supported
+            micBtn.classList.remove('hidden');
+            btnSep.classList.remove('hidden');
+
+            recognition.onresult = (event) => {
+                let interimTranscript = '';
+                let finalTranscript = '';
+
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                    }
+                }
+                
+                if (finalTranscript) {
+                    const currentText = textInput.value;
+                    const spacer = currentText.length > 0 && !currentText.endsWith(' ') ? ' ' : '';
+                    textInput.value = currentText + spacer + finalTranscript;
+                }
+            };
+
+            recognition.onerror = (event) => {
+                console.error("Speech Recognition Error", event.error);
+                stopRecording();
+                showNotification("Mic Error: " + event.error);
+            };
+            
+            recognition.onend = () => {
+                if (isRecording) {
+                    stopRecording(); 
+                }
+            };
+        }
+
+        function toggleRecording() {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        }
+
+        function startRecording() {
+            if (!recognition) return;
+            try {
+                recognition.start();
+                isRecording = true;
+                micBtn.innerHTML = '<i class="fas fa-stop"></i> <span>Stop</span>';
+                micBtn.classList.add('recording-active');
+                micBtn.title = "Stop Recording";
+                textInput.placeholder = "Listening...";
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function stopRecording() {
+            if (!recognition) return;
+            recognition.stop();
+            isRecording = false;
+            micBtn.innerHTML = '<i class="fas fa-microphone"></i> <span>Dictate</span>';
+            micBtn.classList.remove('recording-active');
+            micBtn.title = "Start Dictation";
+            textInput.placeholder = "Type here, dictate, or drag & drop a file...";
+        }
+
+        // --- File Processing Functions ---
+        async function readTextFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = (e) => reject(e);
+                reader.readAsText(file);
+            });
+        }
+
+        async function extractTextFromPdf(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+            let fullText = "";
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const textContent = await page.getTextContent();
+                const pageText = textContent.items.map(item => item.str).join(" ");
+                fullText += pageText + "\n";
+            }
+            return fullText;
+        }
+
+        async function extractTextFromDocx(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+            return result.value;
+        }
+
+        async function extractTextFromImage(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = async () => {
+                    const base64Data = reader.result.split(',')[1];
+                    const mimeType = file.type;
+                    try {
+                        showLoading(true, "Scanning image for text...");
+                        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                        const payload = {
+                            contents: [{
+                                parts: [
+                                    { text: "Extract all text from this image exactly as it appears. Return ONLY the text, no explanations." },
+                                    { inlineData: { mimeType: mimeType, data: base64Data } }
+                                ]
+                            }]
+                        };
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        const result = await response.json();
+                        const extractedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                        if (extractedText) resolve(extractedText);
+                        else reject(new Error("No text found in image"));
+                    } catch (error) { reject(error); }
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // --- Core Application Logic with Robust Buffering ---
+
+        // Universal API caller with retry for 429 errors
+        async function callGeminiApi(url, payload, contextName = "API") {
+            let attempts = 0;
+            const maxAttempts = 5;
+            let delay = 2000; // Start with 2s wait
+
+            while (attempts < maxAttempts) {
+                if(isStopped) throw new Error("Stopped by user");
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.status === 429) {
+                        const retryHeader = response.headers.get('Retry-After');
+                        const waitTime = retryHeader ? parseInt(retryHeader) * 1000 : (delay * Math.pow(2, attempts)); // Exponential backoff or header
+                        // Force at least 15s on 429 to be safe given the 10RPM limit
+                        const effectiveWait = Math.max(waitTime, 15000); 
+                        
+                        console.warn(`${contextName}: Quota limit hit. Waiting ${effectiveWait/1000}s...`);
+                        showLoading(true, `${contextName}: Quota hit. Retrying in ${Math.ceil(effectiveWait/1000)}s...`);
+                        
+                        await new Promise(r => setTimeout(r, effectiveWait));
+                        attempts++;
+                        continue;
+                    }
+
+                    if (!response.ok) {
+                        const err = await response.json();
+                        throw new Error(err.error?.message || `${contextName} failed`);
+                    }
+
+                    return await response.json();
+
+                } catch (e) {
+                    if (e.message.includes("Stopped")) throw e;
+                    console.error(`${contextName} error:`, e);
+                    if(attempts === maxAttempts - 1) throw e;
+                    attempts++;
+                    await new Promise(r => setTimeout(r, 2000)); // Short retry for network blips
+                }
+            }
+            throw new Error(`${contextName}: Max retries exceeded.`);
+        }
+
+        function splitTextIntoChunks(text, maxLength = 300) {
+            const chunks = [];
+            const sentences = text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [text];
+            let currentChunk = "";
+            for (const sentence of sentences) {
+                if ((currentChunk + sentence).length > maxLength) {
+                    if (currentChunk.trim()) chunks.push(currentChunk.trim());
+                    currentChunk = sentence;
+                } else {
+                    currentChunk += sentence;
+                }
+            }
+            if (currentChunk.trim()) chunks.push(currentChunk.trim());
+            return chunks;
+        }
+
+        async function translateText(text, targetLang) {
+            const transUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const transPayload = {
+                contents: [{ parts: [{ text: `Translate to ${targetLang}. Return ONLY translated text. Text: "${text}"` }] }]
+            };
+            
+            const transResult = await callGeminiApi(transUrl, transPayload, "Translation");
+            const translatedText = transResult.candidates?.[0]?.content?.parts?.[0]?.text;
+            
+            if (!translatedText) throw new Error("Translation failed.");
+            return translatedText;
+        }
+
+        async function generateAndStreamAudio(text, voiceName) {
+            const chunks = splitTextIntoChunks(text, 300); 
+            const ttsUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+
+            for (let i = 0; i < chunks.length; i++) {
+                if(isStopped) break;
+                
+                showLoading(true, `Buffering Part ${i+1}/${chunks.length}...`);
+                
+                try {
+                    const ttsPayload = {
+                        contents: [{ parts: [{ text: chunks[i] }] }],
+                        generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceName } } } }
+                    };
+
+                    const ttsResult = await callGeminiApi(ttsUrl, ttsPayload, `Audio Part ${i+1}`);
+                    const audioData = ttsResult.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+                    
+                    if (!audioData) throw new Error(`Audio Part ${i+1} returned no data.`);
+                    
+                    const pcmData = new Int16Array(base64ToArrayBuffer(audioData));
+                    allPcmChunks.push(pcmData);
+                    
+                    if (!isDownloadMode) {
+                        const wavBuffer = writeWavHeader(pcmData);
+                        const blob = new Blob([wavBuffer], { type: 'audio/wav' });
+                        const url = URL.createObjectURL(blob);
+                        audioQueue.push(url);
+                        
+                        if (!isPlayingQueue) {
+                            playNextInQueue();
+                        }
+                    }
+                    
+                    if (i < chunks.length - 1) {
+                        let waitTime = 10000; 
+                        if (!isDownloadMode && currentAudio && !currentAudio.paused) {
+                             const duration = (pcmData.length / 24000) * 1000; 
+                             if(duration > 8000) waitTime = 2000; 
+                             else waitTime = 8000;
+                        }
+                        if(isDownloadMode) showLoading(true, `Processing part ${i+1}... (Waiting for quota)`);
+                        await new Promise(r => setTimeout(r, waitTime)); 
+                    }
+                    
+                } catch (e) {
+                    console.error("Chunk failed", e);
+                    throw e;
+                }
+            }
+            
+            if(isDownloadMode) {
+                downloadMergedAudio();
+            } else {
+                showLoading(false); 
+                statusText.textContent = "Playback active";
+            }
+        }
+
+        function playNextInQueue() {
+            if (audioQueue.length === 0) {
+                isPlayingQueue = false;
+                if(!isStopped && allPcmChunks.length > 0) {
+                    prepareMergedAudioForReplay();
+                }
+                return;
+            }
+            
+            isPlayingQueue = true;
+            const url = audioQueue.shift();
+            
+            if(currentAudio) {
+                currentAudio.pause();
+                URL.revokeObjectURL(currentAudio.src); 
+            }
+
+            currentAudio = new Audio(url);
+            currentAudio.playbackRate = parseFloat(speedRange.value); 
+            currentAudio.volume = parseFloat(volumeRange.value);
+            
+            timelineControls.classList.remove('hidden');
+            pauseAudioBtn.classList.remove('hidden');
+            resumeAudioBtn.classList.add('hidden');
+            visualizer.classList.add('active');
+            statusText.textContent = "Speaking...";
+
+            currentAudio.onloadedmetadata = () => {
+                if (!currentAudio) return; 
+                durationTimeDisplay.textContent = formatTime(currentAudio.duration); 
+                seekBar.max = currentAudio.duration;
+            };
+            currentAudio.ontimeupdate = () => {
+                if (!currentAudio) return; 
+                seekBar.value = currentAudio.currentTime;
+                currentTimeDisplay.textContent = formatTime(currentAudio.currentTime);
+            };
+            currentAudio.onended = () => {
+                playNextInQueue();
+            };
+            currentAudio.play();
+        }
+
+        function prepareMergedAudioForReplay() {
+            const mergedBlob = mergePcmToWav(allPcmChunks);
+            const url = URL.createObjectURL(mergedBlob);
+            
+            currentAudio = new Audio(url);
+            currentAudio.playbackRate = parseFloat(speedRange.value);
+            currentAudio.volume = parseFloat(volumeRange.value);
+            
+            statusText.textContent = "Full Audio Ready";
+            statusText.classList.add('text-green-600');
+            visualizer.classList.remove('active');
+            pauseAudioBtn.classList.add('hidden');
+            resumeAudioBtn.classList.remove('hidden'); 
+            
+            currentAudio.onended = () => {
+                resetUI();
+                timelineControls.classList.add('hidden');
+            };
+        }
+
+        function downloadMergedAudio() {
+            if (allPcmChunks.length === 0) return;
+            const blob = mergePcmToWav(allPcmChunks);
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `vocalize-full-${Date.now()}.wav`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showNotification("Full Download Started!");
+            showLoading(false);
+        }
+
+        function mergePcmToWav(chunks) {
+            const totalLength = chunks.reduce((acc, part) => acc + part.length, 0);
+            const mergedPcm = new Int16Array(totalLength);
+            let offset = 0;
+            for (const part of chunks) {
+                mergedPcm.set(part, offset);
+                offset += part.length;
+            }
+            const buffer = writeWavHeader(mergedPcm);
+            return new Blob([buffer], { type: 'audio/wav' });
+        }
+
+        async function handleAction(type) {
+            const text = textInput.value.trim();
+            if (!text) { showNotification("Please enter or upload text."); return; }
+            
+            isStopped = true; 
+            if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+            await new Promise(r => setTimeout(r, 50));
+            isStopped = false;
+
+            audioQueue = [];
+            allPcmChunks = [];
+            isPlayingQueue = false;
+            isDownloadMode = (type === 'download');
+
+            try {
+                const targetLang = languageSelect.value;
+                const voiceName = voiceSelect.value;
+                
+                showLoading(true, `Translating...`);
+                const translatedText = await translateText(text, targetLang);
+                translatedTextContent.textContent = translatedText;
+                translatedPreview.classList.remove('hidden');
+
+                // Add small cooldown after translation to protect quota
+                showLoading(true, "Cooling down (5s)...");
+                await new Promise(r => setTimeout(r, 5000));
+
+                await generateAndStreamAudio(translatedText, voiceName);
+
+            } catch (error) {
+                if (error.message.includes("Stopped")) {
+                    showNotification("Process Cancelled");
+                } else {
+                    console.error(error);
+                    showNotification("Error: " + error.message);
+                }
+                showLoading(false);
+            }
+        }
+
+        async function processUploadedFile(file) {
+            showLoading(true, "Processing document...");
+            try {
+                let extractedText = "";
+                if (file.type === "application/pdf") extractedText = await extractTextFromPdf(file);
+                else if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") extractedText = await extractTextFromDocx(file);
+                else if (file.type.startsWith("image/")) extractedText = await extractTextFromImage(file);
+                else extractedText = await readTextFile(file);
+
+                if(!extractedText || extractedText.trim().length === 0) showNotification("Warning: No text found in file.");
+                else { textInput.value = extractedText; showNotification("File processed successfully!"); }
+                
+                fileUpload.value = '';
+            } catch (error) { console.error(error); showNotification("Error reading file."); } 
+            finally { showLoading(false); }
+        }
+
+        // --- Event Listeners ---
+        playBtn.addEventListener('click', () => handleAction('play'));
+        downloadBtn.addEventListener('click', () => handleAction('download'));
+
+        const cancelAction = () => {
+            isStopped = true;
+            if (currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; currentAudio = null; }
+            resetUI();
+            timelineControls.classList.add('hidden');
+            showLoading(false);
+            showNotification("Cancelled");
+        };
+
+        stopBtn.addEventListener('click', cancelAction);
+        cancelBtn.addEventListener('click', cancelAction);
+
+        clearBtn.addEventListener('click', () => {
+            textInput.value = '';
+            translatedPreview.classList.add('hidden');
+            fileUpload.value = '';
+            isStopped = true;
+            if(currentAudio) { currentAudio.pause(); resetUI(); timelineControls.classList.add('hidden'); }
+        });
+        
+        micBtn.addEventListener('click', toggleRecording);
+
+        speedRange.addEventListener('input', (e) => {
+            speedValue.textContent = e.target.value + 'x';
+            if (currentAudio) currentAudio.playbackRate = parseFloat(e.target.value);
+        });
+
+        volumeRange.addEventListener('input', (e) => {
+            volumeValue.textContent = Math.round(e.target.value * 100) + '%';
+            if (currentAudio) currentAudio.volume = parseFloat(e.target.value);
+        });
+
+        seekBar.addEventListener('input', (e) => {
+            if (currentAudio) {
+                currentAudio.currentTime = e.target.value;
+            }
+        });
+
+        pauseAudioBtn.addEventListener('click', () => {
+            if(currentAudio) {
+                currentAudio.pause();
+                pauseAudioBtn.classList.add('hidden');
+                resumeAudioBtn.classList.remove('hidden');
+                statusText.textContent = "Paused";
+                visualizer.classList.remove('active');
+            }
+        });
+
+        resumeAudioBtn.addEventListener('click', () => {
+            if(currentAudio) {
+                currentAudio.play();
+                resumeAudioBtn.classList.add('hidden');
+                pauseAudioBtn.classList.remove('hidden');
+            }
+        });
+
+        fileUpload.addEventListener('change', async (e) => { if (e.target.files[0]) await processUploadedFile(e.target.files[0]); });
+        
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-active'); });
+        dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); dropZone.classList.remove('drag-active'); });
+        dropZone.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-active');
+            if (e.dataTransfer.files.length > 0) await processUploadedFile(e.dataTransfer.files[0]);
+        });
+
+    </script>
+</body>
+</html>
+ <button class="tab-btn" onclick="openTab(event, 'jobs_tab')">Jobs</button>
+   <a href="#" onclick="openTab(event, 'jobs_tab'); return false;" class="nav-link jobs-link">
+                <?php if(count($jobs) > 0 && (strtotime($jobs[0]['created_at']) > strtotime('-3 days'))): ?>
+                    <span class="notification-dot"></span>
+                <?php endif; ?>
+            </a>
+            <button class="tab-btn" onclick="openTab(event, 'jobs_tab')">Placements</button>

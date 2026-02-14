@@ -1,0 +1,1 @@
+INSERT IGNORE INTO settings (setting_key, setting_value) VALUES ('suggestions_enabled', '1');

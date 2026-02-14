@@ -1,0 +1,1 @@
+CREATE TABLE users_otp (id int AUTO_INCREMENT PRIMARY KEY, email varchar(255), otp varchar(10));
